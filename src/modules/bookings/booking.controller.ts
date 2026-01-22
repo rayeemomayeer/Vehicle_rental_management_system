@@ -14,7 +14,7 @@ const createBooking = async (req: Request, res: Response) => {
 const getBooking = async (req: Request, res: Response) => {
     try {
         const bookings = await bookingService.getBooking(req.user);
-        res.status(200).json({ success: true, message: "Bookings retrieved successfully", data: bookings });
+        res.status(200).json({ success: true, message: bookings.message, data: bookings.data });
     } catch (err: any) {
         res.status(400).json({ success: false, message: err.message });
     }
@@ -23,8 +23,17 @@ const getBooking = async (req: Request, res: Response) => {
 const updateBooking = async (req: Request, res: Response) => {
     try {
         const {status} = req.body;
-        const booking = await bookingService.updateBooking(Number(req.params.bookingId), status, req.user);
-        res.status(200).json({ success: true, message: `Booking  ${status} updated successfully`, data: booking });
+        const result = await bookingService.updateBooking(Number(req.params.bookingId), status, req.user);
+        let message: string;
+        let data: any;
+        if (status === "cancelled") {
+            message = "Booking cancelled successfully";
+            data = result.booking;
+        } else {
+            message = "Booking marked as returned. Vehicle is now available";
+            data = { ...result.booking, vehicle: result.vehicle };
+        }
+        res.status(200).json({ success: true, message, data });
     }catch (err: any) {
         res.status(400).json({ success: false, message: err.message });
     }
